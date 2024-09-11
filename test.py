@@ -116,42 +116,105 @@ def comparative_analysis(symbol, benchmark_symbol='SPY'):
     beta = stock_returns.cov(benchmark_returns) / benchmark_returns.var()
     
     return beta
+def prepare_data_summary(data, fundamental_ratios, support_levels, resistance_levels, historical_volatility, atr, beta, sentiment_score):
+    latest_price = data['Close'].iloc[-1]
+    latest_volume = data['Volume'].iloc[-1]
+    
+    summary = f"""
+Stock Data Summary:
 
+Symbol: {data.index.name}
+Date Range: {data.index[0].strftime('%Y-%m-%d')} to {data.index[-1].strftime('%Y-%m-%d')}
+
+Price Information:
+- Latest Close: ${latest_price:.2f}
+- 52-Week Range: ${data['Close'].min():.2f} - ${data['Close'].max():.2f}
+- 50-day SMA: ${data['SMA50'].iloc[-1]:.2f}
+- 200-day SMA: ${data['SMA200'].iloc[-1]:.2f}
+
+Volume Information:
+- Latest Volume: {latest_volume:,}
+- Average Volume (50-day): {data['Volume'].rolling(window=50).mean().iloc[-1]:,.0f}
+
+Technical Indicators:
+- RSI (14-day): {data['RSI'].iloc[-1]:.2f}
+- MACD: {data['MACD'].iloc[-1]:.2f}
+- Signal Line: {data['Signal_Line'].iloc[-1]:.2f}
+- Bollinger Bands: 
+  Upper: ${data['BB_Upper'].iloc[-1]:.2f}
+  Middle: ${data['BB_Middle'].iloc[-1]:.2f}
+  Lower: ${data['BB_Lower'].iloc[-1]:.2f}
+
+Support and Resistance:
+- Recent Support Level: ${support_levels.iloc[-1]:.2f}
+- Recent Resistance Level: ${resistance_levels.iloc[-1]:.2f}
+
+Fundamental Ratios:
+- P/E Ratio: {fundamental_ratios['P/E Ratio']}
+- P/B Ratio: {fundamental_ratios['P/B Ratio']}
+- Debt to Equity: {fundamental_ratios['Debt to Equity']}
+- ROE: {fundamental_ratios['ROE']}
+- EPS Growth: {fundamental_ratios['EPS Growth']}
+
+Risk Measures:
+- Beta: {beta:.2f}
+- Historical Volatility: {historical_volatility:.2f}
+- Average True Range: {atr.iloc[-1]:.2f}
+
+Sentiment:
+- Sentiment Score: {sentiment_score:.2f}
+"""
+    return summary
 # Function to perform sentiment analysis
 def sentiment_analysis(symbol):
     news = yf.Ticker(symbol).news
     sia = SentimentIntensityAnalyzer()
     sentiments = [sia.polarity_scores(article['title'])['compound'] for article in news]
     return np.mean(sentiments)
-# Enhanced CrewAI Agents
 data_collector = Agent(
     role='Advanced Data Collector',
     goal='Collect and synthesize comprehensive financial and market data for the given stock',
-    backstory='You are a seasoned financial data scientist with decades of experience in gathering and preprocessing financial data from various sources. Your expertise spans across technical indicators, fundamental ratios, and market sentiment data. You have a keen eye for identifying relevant data points that can provide unique insights into a stock\'s performance and potential.',
+    backstory='You are a seasoned financial data scientist with decades of experience in gathering and preprocessing financial data from various sources. Your expertise spans across technical indicators, fundamental ratios, and market sentiment data.',
     allow_delegation=False,
     llm=llm
 )
 
-analyst = Agent(
-    role='Senior Financial Analyst',
-    goal='Perform in-depth analysis of financial data and identify complex market trends and patterns',
-    backstory='You are a highly regarded financial analyst with a track record of accurately predicting market movements. Your analysis combines technical, fundamental, and sentiment factors to provide a holistic view of a stock\'s potential. You have a unique ability to synthesize disparate data points into coherent and actionable insights.',
+fundamental_analyst = Agent(
+    role='Senior Fundamental Analyst',
+    goal='Perform in-depth fundamental analysis of the stock',
+    backstory='You are a highly regarded financial analyst specializing in fundamental analysis. Your expertise lies in analyzing financial statements, industry trends, and company strategies to provide valuable insights.',
     allow_delegation=False,
     llm=llm
 )
 
-report_generator = Agent(
-    role='Executive Research Report Generator',
-    goal='Create comprehensive, actionable, and visually appealing research reports for high-level decision makers',
-    backstory='You are an expert in distilling complex financial analyses into clear, concise, and impactful reports. Your reports have guided investment decisions at the highest levels of financial institutions. You have a talent for presenting data in a visually compelling manner and structuring information for maximum clarity and impact.',
+technical_analyst = Agent(
+    role='Expert Technical Analyst',
+    goal='Conduct comprehensive technical analysis of the stock',
+    backstory='You are a renowned technical analyst with a track record of accurately predicting market movements based on chart patterns, technical indicators, and price action.',
     allow_delegation=False,
     llm=llm
 )
 
 risk_assessor = Agent(
     role='Risk Assessment Specialist',
-    goal='Evaluate and quantify the risk associated with investment opportunities, providing a nuanced understanding of potential downsides',
-    backstory='You are a risk management expert with a deep understanding of financial markets and statistical modeling. Your risk assessments have helped major institutions navigate volatile market conditions. You have a particular talent for identifying hidden risks and providing context-specific risk mitigation strategies.',
+    goal='Evaluate and quantify the risk associated with the investment opportunity',
+    backstory='You are a risk management expert with a deep understanding of financial markets and statistical modeling. Your risk assessments have helped major institutions navigate volatile market conditions.',
+    allow_delegation=False,
+    llm=llm
+)
+
+valuation_expert = Agent(
+    role='Valuation and Forecasting Expert',
+    goal='Provide accurate valuation analysis and future forecasts for the stock',
+    backstory='You are a seasoned valuation expert with experience in various valuation methodologies. Your forecasts are highly regarded in the financial industry for their accuracy and depth.',
+    allow_delegation=False,
+    llm=llm
+)
+
+report_generator = Agent(
+    role='Executive Research Report Generator',
+    goal='Create a comprehensive, actionable, and visually appealing research report for high-level decision makers',
+    backstory='You are an expert in distilling complex financial analyses into clear, concise, and impactful reports. Your reports have guided investment decisions at the highest levels of financial institutions.',
     allow_delegation=False,
     llm=llm
 )
@@ -171,99 +234,88 @@ def run_enhanced_research_assistant(symbol, start_date, end_date):
     sentiment_score = sentiment_analysis(symbol)
     
     # Prepare comprehensive data summary
-    latest_price = data['Close'].iloc[-1]
-    data_summary = f"""
-    Symbol: {symbol}
-    Latest closing price: ${latest_price:.2f}
-    50-day SMA: ${data['SMA50'].iloc[-1]:.2f}
-    200-day SMA: ${data['SMA200'].iloc[-1]:.2f}
-    RSI: {data['RSI'].iloc[-1]:.2f}
-    MACD: {data['MACD'].iloc[-1]:.2f}
-    Signal Line: {data['Signal_Line'].iloc[-1]:.2f}
-    Bollinger Bands: Upper ${data['BB_Upper'].iloc[-1]:.2f}, Middle ${data['BB_Middle'].iloc[-1]:.2f}, Lower ${data['BB_Lower'].iloc[-1]:.2f}
-    Volume: {data['Volume'].iloc[-1]}, 20-day Avg: {data['Volume_MA'].iloc[-1]:.0f}
-    
-    Fundamental Ratios:
-    P/E Ratio: {fundamental_ratios['P/E Ratio']}
-    P/B Ratio: {fundamental_ratios['P/B Ratio']}
-    Debt to Equity: {fundamental_ratios['Debt to Equity']}
-    ROE: {fundamental_ratios['ROE']}
-    EPS Growth: {fundamental_ratios['EPS Growth']}
-    
-    Recent Support Level: ${support_levels.iloc[-1]:.2f}
-    Recent Resistance Level: ${resistance_levels.iloc[-1]:.2f}
-    
-    Historical Volatility: {historical_volatility:.2f}
-    Average True Range: {atr.iloc[-1]:.2f}
-    Beta: {beta:.2f}
-    Sentiment Score: {sentiment_score:.2f}
-    
-    Data period: {data.index[0].strftime('%Y-%m-%d')} to {data.index[-1].strftime('%Y-%m-%d')}
-    """
+    data_summary = prepare_data_summary(data, fundamental_ratios, support_levels, resistance_levels, historical_volatility, atr, beta, sentiment_score)
 
     # Task 1: Collect and Summarize Data
     collect_data_task = Task(
         description=f"Collect and synthesize comprehensive stock data for {symbol} from {start_date} to {end_date}. Include technical indicators, fundamental ratios, volatility measures, and sentiment analysis. Identify any unique or standout data points that could provide special insights.",
         agent=data_collector,
-        expected_output="A detailed summary of the collected stock data including all key metrics, indicators, and any noteworthy data anomalies or patterns."
+        expected_output="A detailed summary of collected stock data including all key metrics, indicators, and any noteworthy data anomalies or patterns."
     )
 
-    # Task 2: Perform In-depth Analysis
-    analyze_data_task = Task(
-        description=f"Conduct a thorough analysis of the following financial data and provide comprehensive insights:\n{data_summary}\n"
-                    "Provide: 1) Technical analysis including price trends, indicator signals, and chart patterns, with emphasis on unique formations or divergences. "
-                    "2) Fundamental analysis based on key ratios, comparing to industry averages and historical trends. "
-                    "3) Detailed volatility and risk assessment, including potential scenarios. "
-                    "4) Comparative performance analysis against sector and market benchmarks. "
-                    "5) Sentiment analysis interpretation, including potential impact on short and long-term price movements. "
-                    "Synthesize these factors to form an overall market outlook and provide specific, actionable insights.",
-        agent=analyst,
-        expected_output="A comprehensive, nuanced analysis of the stock data with deep insights on multiple facets of stock performance, market positioning, and potential future scenarios."
+    # Task 2: Perform Fundamental Analysis
+    fundamental_analysis_task = Task(
+        description=f"Conduct a thorough fundamental analysis for {symbol} based on the following data:\n{data_summary}\n"
+                    "Provide: 1) Detailed company overview including business model, revenue streams, and competitive landscape. "
+                    "2) In-depth analysis of financial statements (Income Statement, Balance Sheet, Cash Flow). "
+                    "3) Key financial ratios analysis and comparison with industry averages. "
+                    "4) SWOT analysis. "
+                    "Synthesize these factors to form an overall fundamental outlook.",
+        agent=fundamental_analyst,
+        expected_output="A comprehensive fundamental analysis report including company overview, financial statement analysis, ratio analysis, SWOT analysis, and overall fundamental outlook."
     )
 
-    # Task 3: Assess Risk
+    # Task 3: Perform Technical Analysis
+    technical_analysis_task = Task(
+        description=f"Conduct a comprehensive technical analysis for {symbol} based on the provided data. "
+                    "Include: 1) Detailed analysis of price trends, chart patterns, and key levels. "
+                    "2) In-depth examination of technical indicators (Moving Averages, RSI, MACD, Bollinger Bands). "
+                    "3) Volume analysis and its implications. "
+                    "4) Identification of potential entry and exit points. "
+                    "Provide a clear technical outlook based on your findings.",
+        agent=technical_analyst,
+        expected_output="A detailed technical analysis report including price trend analysis, technical indicator examination, volume analysis, entry/exit points, and overall technical outlook."
+    )
+
+    # Task 4: Assess Risk
     assess_risk_task = Task(
-        description=f"Based on the provided data and analysis for {symbol}, conduct a thorough and nuanced risk assessment. "
-                    "Consider: 1) Historical and implied volatility, including potential black swan events. "
-                    "2) Beta and market correlation, analyzing in different market conditions. "
-                    "3) Fundamental risk factors, including industry-specific risks. "
-                    "4) Technical risk signals, with emphasis on potential breakdown points. "
-                    "5) Market sentiment risks, including potential shifts in investor perception. "
-                    "Provide a quantitative risk score, qualitative risk analysis, and specific risk mitigation strategies.",
+        description=f"Based on the provided data and analysis for {symbol}, conduct a thorough risk assessment. "
+                    "Consider: 1) Market risk factors including volatility and beta analysis. "
+                    "2) Company-specific risks derived from fundamental analysis. "
+                    "3) Industry and macroeconomic risk factors. "
+                    "4) Quantitative risk measures (VaR, Expected Shortfall). "
+                    "Provide a comprehensive risk profile and potential mitigation strategies.",
         agent=risk_assessor,
-        expected_output="A detailed risk assessment report including quantitative metrics, qualitative analysis of potential risk factors, and actionable risk management strategies."
+        expected_output="A comprehensive risk assessment report including market risk analysis, company-specific risks, industry/macroeconomic risks, quantitative risk measures, and risk mitigation strategies."
     )
 
-    # Task 4: Generate Comprehensive Report
+    # Task 5: Perform Valuation and Forecasting
+    valuation_task = Task(
+        description=f"Conduct a detailed valuation analysis for {symbol} and provide future forecasts. "
+                    "Include: 1) Multiple valuation methods (DCF, Comparative, DDM if applicable). "
+                    "2) Sensitivity analysis of key valuation drivers. "
+                    "3) Short-term and long-term price targets with clear justifications. "
+                    "4) Revenue and earnings forecasts for the next 3-5 years. "
+                    "Provide a final valuation summary and growth outlook.",
+        agent=valuation_expert,
+        expected_output="A detailed valuation and forecasting report including multiple valuation methods, sensitivity analysis, price targets, revenue/earnings forecasts, and overall growth outlook."
+    )
+
+    # Task 6: Generate Comprehensive Report
     generate_report_task = Task(
-        description="Generate a comprehensive, visually appealing, and actionable research report based on the data summary, in-depth analysis, and risk assessment. "
-                    "Include: 1) Executive summary with key takeaways. "
-                    "2) Technical analysis highlights with clear visual representations. "
-                    "3) Fundamental analysis insights, benchmarked against industry standards. "
-                    "4) Detailed risk assessment summary with scenario analysis. "
-                    "5) Market positioning and sentiment analysis, including potential catalysts. "
-                    "6) Actionable recommendations with clear justifications. "
-                    "7) Appendix with detailed data and methodologies. "
-                    "Use the Stock Visualization Tool to create relevant charts and graphs to support your analysis. "
-                    "Ensure the report is professional, data-driven, visually engaging, and provides clear, actionable insights for decision-making. "
-                    "Structure the report in a logical flow, using headings, subheadings, bullet points, and data visualizations for clarity and impact.",
+        description="Generate a comprehensive, visually appealing, and actionable research report based on all previous analyses. "
+                    "Include: 1) Executive summary with key takeaways and investment recommendation. "
+                    "2) Detailed sections on Company Overview, Stock Performance, Fundamental Analysis, Technical Analysis, Risk Assessment, and Valuation & Forecasts. "
+                    "3) Clear visualizations and charts to support each section. "
+                    "4) Appendix with detailed data and methodologies. "
+                    "Ensure the report follows the structure provided in the detailed outline, is data-driven, and provides clear, actionable insights for decision-making.",
         agent=report_generator,
-        expected_output="A professional, comprehensive, visually appealing, and actionable research report on the analyzed stock, suitable for high-level decision makers, formatted as a well-structured document with integrated visualizations."
+        expected_output="A comprehensive, visually appealing, and actionable stock research report including all analyzed aspects and a clear investment recommendation."
     )
-
-
     # Create and run the crew
     crew = Crew(
-        agents=[data_collector, analyst, risk_assessor, report_generator],
-        tasks=[collect_data_task, analyze_data_task, assess_risk_task, generate_report_task],
+        agents=[data_collector, fundamental_analyst, technical_analyst, risk_assessor, valuation_expert, report_generator],
+        tasks=[collect_data_task, fundamental_analysis_task, technical_analysis_task, assess_risk_task, valuation_task, generate_report_task],
         verbose=True
     )
+
+    result = crew.kickoff()
 
     result = crew.kickoff()
     print("CrewOutput type:", type(result))
     print("CrewOutput attributes:", dir(result))
     
-    # Try to access the content in different ways
+     # Process and return the result
     if hasattr(result, 'final_output'):
         return result.final_output
     elif isinstance(result, dict) and 'final_output' in result:
@@ -271,8 +323,19 @@ def run_enhanced_research_assistant(symbol, start_date, end_date):
     elif isinstance(result, str):
         return result
     else:
-        # If we can't find the output in an expected format, return the string representation
         return str(result)
+
+# Run the enhanced research assistant
+if __name__ == "__main__":
+    symbol = "AAPL"
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=365)  # One year of data
+    
+    print("Starting enhanced research assistant...")
+    report_content = run_enhanced_research_assistant(symbol, start_date, end_date)
+    print("Enhanced research assistant completed.")
+    
+    
 import base64
 from io import BytesIO
 
