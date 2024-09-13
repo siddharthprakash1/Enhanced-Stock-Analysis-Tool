@@ -3,7 +3,7 @@
 ## Leveraging Cutting-Edge AI for Sophisticated Market Analysis
 
 This project is a state-of-the-art financial analytics platform that integrates advanced AI technologies to provide comprehensive stock market analysis and insights.
-### NOTE:The output is the pdf file and for this analysis we have used apple's stock in the past 1yr to make an analysis.
+###### NOTE:The output is the pdf file and for this analysis we have used apple's stock in the past 1yr to make an analysis.
 ## Key Technologies and Methodologies
 
 - **Multi-Agent AI System**: Utilizes the CrewAI framework to orchestrate a team of specialized AI agents, each focusing on different aspects of financial analysis.
