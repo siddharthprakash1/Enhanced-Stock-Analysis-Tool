@@ -213,7 +213,7 @@ valuation_expert = Agent(
 
 report_generator = Agent(
     role='Executive Research Report Generator',
-    goal='Create a comprehensive, actionable, and visually appealing research report for high-level decision makers',
+    goal='Create a comprehensive, actionable, and visually appealing research report for high-level decision makers.Include facts figures and numbers that you had calculated to reach to the output.',
     backstory='You are an expert in distilling complex financial analyses into clear, concise, and impactful reports. Your reports have guided investment decisions at the highest levels of financial institutions.',
     allow_delegation=False,
     llm=llm
@@ -298,6 +298,8 @@ def run_enhanced_research_assistant(symbol, start_date, end_date):
                     "2) Detailed sections on Company Overview, Stock Performance, Fundamental Analysis, Technical Analysis, Risk Assessment, and Valuation & Forecasts. "
                     "3) Clear visualizations and charts to support each section. "
                     "4) Appendix with detailed data and methodologies. "
+                    "5)Most important include as many numbers and facts as you can and make the report a bit wordy."
+                    "6)Please explain each graph that you are putting in the report."
                     "Ensure the report follows the structure provided in the detailed outline, is data-driven, and provides clear, actionable insights for decision-making.",
         agent=report_generator,
         expected_output="A comprehensive, visually appealing, and actionable stock research report including all analyzed aspects and a clear investment recommendation."
