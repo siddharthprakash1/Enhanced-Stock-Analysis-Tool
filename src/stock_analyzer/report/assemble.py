@@ -2,6 +2,8 @@ from pathlib import Path
 import re
 
 HERO_KEYS = ["last_close", "pe_ratio", "rsi_14", "beta", "sharpe", "max_drawdown", "var_95"]
+SHORT_LABELS = {"last_close": "Last", "pe_ratio": "P/E", "rsi_14": "RSI", "beta": "Beta",
+                "sharpe": "Sharpe", "max_drawdown": "Max DD", "var_95": "VaR 95%"}
 SECTION_TITLES = {
     "exec_summary": "Executive Summary", "overview": "Company Overview",
     "technical": "Technical Analysis", "fundamental": "Fundamental Analysis",
@@ -34,7 +36,7 @@ def build_context(symbol, draft, ground_truth, audit, charts):
     if ground_truth:
         mv0 = next(iter(ground_truth.values()))
         as_of = mv0.as_of.strftime("%d %b %Y") if hasattr(mv0.as_of, "strftime") else str(mv0.as_of)
-    kpis = [{"label": ground_truth[k].label, "display": ground_truth[k].display()}
+    kpis = [{"label": SHORT_LABELS.get(k, ground_truth[k].label), "display": ground_truth[k].display()}
             for k in HERO_KEYS if k in ground_truth]
     sections = [{
         "title": SECTION_TITLES.get(s.id, s.id.replace("_", " ").title()),
