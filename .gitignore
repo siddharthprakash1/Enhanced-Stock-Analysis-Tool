@@ -1,3 +1,11 @@
 .env
 # brainstorming visual-companion scratch
 .superpowers/
+
+# python build/test artifacts
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+out/
+*.egg-info/
