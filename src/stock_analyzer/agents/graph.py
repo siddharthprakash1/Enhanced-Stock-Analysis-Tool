@@ -17,7 +17,7 @@ def build_graph(structured_factory, verify: bool = True, ground_truth=None, max_
     from ..verification.extract import make_extract_node
     from ..verification.judge import make_verify_node
     from ..verification.reconcile import gate
-    g.add_node("extract_claims", make_extract_node(structured_factory))
+    g.add_node("extract_claims", make_extract_node(structured_factory, ground_truth))
     g.add_node("verify_claims", make_verify_node(structured_factory, ground_truth, 0.01, 0.05))
 
     def gate_with_cap(state):

@@ -51,8 +51,10 @@ def run_analysis(symbol, period, out_dir, provider, structured_factory, benchmar
     render_pdf(ctx, out / f"{symbol}_report.pdf")
 
     # 7. Render interactive HTML dashboard
+    # Dashboard expects kpis with "value"/"unit"; adapt from the new "display" key.
+    dash_kpis = [{"label": k["label"], "value": k["display"], "unit": ""} for k in ctx["kpis"]]
     verdict_rows = [{"text": v.rationale, "status": v.status} for v in state.get("verdicts", [])]
-    render_dashboard(symbol, ph.bars, ctx["kpis"], verdict_rows, out / f"{symbol}_dashboard.html")
+    render_dashboard(symbol, ph.bars, dash_kpis, verdict_rows, out / f"{symbol}_dashboard.html")
 
     return {
         "pdf": out / f"{symbol}_report.pdf",

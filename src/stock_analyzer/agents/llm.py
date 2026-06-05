@@ -13,10 +13,8 @@ def make_llm(settings: Settings):
         return ChatGoogleGenerativeAI(model=settings.gemini_model, google_api_key=settings.google_api_key,
                                       temperature=0, rate_limiter=limiter, max_retries=3)
     from langchain_anthropic import ChatAnthropic
-    # Opus 4.8: adaptive thinking (native param). Validate with a real ANTHROPIC_API_KEY before production.
-    return ChatAnthropic(model=settings.model, max_tokens=16000,
-                         anthropic_api_key=settings.anthropic_api_key,
-                         thinking={"type": "adaptive"})
+    # Cheapest Claude (Haiku 4.5). Structured output is supported; no adaptive thinking (Haiku doesn't support it).
+    return ChatAnthropic(model=settings.model, max_tokens=16000, anthropic_api_key=settings.anthropic_api_key)
 
 
 def structured(llm, schema):

@@ -3,6 +3,10 @@ import pandas as pd
 from .value import MetricValue
 
 
+def _pct(x):
+    return x * 100 if (x is not None and x == x) else x  # x==x is False for NaN
+
+
 def compute_risk(bars: pd.DataFrame, benchmark_close: pd.Series, rf: float = 0.0) -> dict[str, MetricValue]:
     as_of = bars.index[-1].date()
     c = bars["Close"]
@@ -41,10 +45,10 @@ def compute_risk(bars: pd.DataFrame, benchmark_close: pd.Series, rf: float = 0.0
 
     return {
         "beta": mv("beta", "Beta (vs SPY)", beta, ""),
-        "hist_vol": mv("hist_vol", "Annualized Volatility", hv, "%"),
+        "hist_vol": mv("hist_vol", "Annualized Volatility", _pct(hv), "%"),
         "atr": mv("atr", "Average True Range", atr, "$"),
-        "max_drawdown": mv("max_drawdown", "Max Drawdown", max_dd, "%"),
+        "max_drawdown": mv("max_drawdown", "Max Drawdown", _pct(max_dd), "%"),
         "sharpe": mv("sharpe", "Sharpe Ratio", sharpe, ""),
-        "var_95": mv("var_95", "Value at Risk (95%)", var95, "%"),
-        "downside_dev": mv("downside_dev", "Downside Deviation", downside, "%"),
+        "var_95": mv("var_95", "Value at Risk (95%)", _pct(var95), "%"),
+        "downside_dev": mv("downside_dev", "Downside Deviation", _pct(downside), "%"),
     }

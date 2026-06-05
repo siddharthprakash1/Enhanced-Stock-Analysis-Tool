@@ -6,8 +6,9 @@ def test_pdf_bytes_produced(tmp_path):
         "symbol": "AAPL",
         "recommendation": "buy",
         "confidence": "high",
-        "sections": [{"id": "technical", "prose": "RSI is 66.8", "charts": []}],
-        "kpis": [{"label": "RSI", "value": "66.80", "unit": ""}],
+        "as_of": "05 Jun 2026",
+        "sections": [{"title": "Technical Analysis", "paras": ["RSI is 66.8"], "charts": []}],
+        "kpis": [{"label": "RSI", "display": "66.80"}],
         "audit": {
             "total_claims": 1,
             "supported": 1,
@@ -16,6 +17,7 @@ def test_pdf_bytes_produced(tmp_path):
             "corrections_applied": [],
             "residual_unverified": [],
         },
+        "residual": [],
     }
     out = tmp_path / "r.pdf"
     render_pdf(ctx, out)

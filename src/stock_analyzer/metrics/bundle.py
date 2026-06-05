@@ -43,5 +43,5 @@ class MetricsBundle(BaseModel):
         lines = [f"# Ground-truth metrics for {self.symbol} ({self.period})"]
         for key in sorted(self.metrics):
             mv = self.metrics[key]
-            lines.append(f"- {mv.label} [{mv.key}]: {mv.display()} {mv.unit}".rstrip())
+            lines.append(f"- {mv.label}: {mv.display()}")
         return "\n".join(lines)

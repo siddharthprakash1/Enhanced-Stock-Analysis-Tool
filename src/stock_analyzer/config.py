@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     google_api_key: str | None = None
     fmp_api_key: str | None = None
     llm_provider: str = "gemini"            # "gemini" (dev) | "anthropic" (final)
-    model: str = "claude-opus-4-8"          # used when llm_provider == "anthropic"
+    model: str = "claude-haiku-4-5"  # cheapest Claude; used when llm_provider == "anthropic"
     gemini_model: str = "gemini-2.5-flash-lite"  # free-tier-friendly default; used when llm_provider == "gemini"
     effort: str = "high"
     max_revisions: int = 2
