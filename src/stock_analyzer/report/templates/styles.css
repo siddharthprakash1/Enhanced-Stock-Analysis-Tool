@@ -61,6 +61,7 @@ ul.news li { font-size: 8.6pt; margin-bottom: 3px; color: #2a3340; }
 .verify .vsum { font-size: 9pt; background: #f4f6f9; border-left: 3px solid #157347; padding: 6px 11px; margin: 0 0 7px; }
 .verify .vsum .bad { color: #b02a37; } .verify .vsum .warn { color: #b8860b; } .verify .vsum .muted { color: #8a94a6; font-weight: 400; }
 .st-contradicted { color: #b02a37; font-weight: 700; } .st-unsupported { color: #b8860b; font-weight: 700; }
+.verify table.data td:last-child { text-align: left; font-family: Helvetica, Arial, sans-serif; font-weight: 400; color: #2a3340; }
 .ok { color: #157347; font-weight: 600; }
 
 .disclosures { margin-top: 16px; border-top: 1px solid #d7dbe2; padding-top: 8px; }
