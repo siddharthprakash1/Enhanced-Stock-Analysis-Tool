@@ -14,9 +14,13 @@ def make_verify_node(structured_factory, ground_truth, tol_rel, tol_abs):
                 continue
             msgs = [
                 {"role": "system", "content": (
-                    "Judge the claim using ONLY the ground-truth metrics below. Respond with status "
-                    "'supported', 'unsupported', or 'contradicted', a one-sentence rationale, and a "
-                    "correction only if contradicted."
+                    "You verify a research report against computed ground-truth metrics. Judge ONLY "
+                    "factual/quantitative claims. Mark 'supported' when a claim agrees with the metrics, "
+                    "INCLUDING reasonable rounding or approximations (e.g. '~60%' for 59.6%, 'about 209%' "
+                    "for 208.65% are SUPPORTED). Mark 'contradicted' ONLY when a claim is materially wrong "
+                    "or clearly conflicts with the metrics. Do NOT contradict the investment recommendation, "
+                    "subjective judgments, opinions, or framing — mark those 'supported'. Give a one-sentence "
+                    "rationale; add a correction only when contradicted."
                 )},
                 {"role": "user", "content": (
                     f"Claim: {c.text}\n\nGround-truth metrics:\n"

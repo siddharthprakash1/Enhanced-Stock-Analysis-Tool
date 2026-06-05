@@ -37,9 +37,9 @@ def compute_valuation(fcf0: float, growth: float, wacc: float, as_of: date, shar
     tg = price_targets(fcf0, growth, wacc, shares_outstanding)
     if tg:
         out["dcf_per_share"] = mv("dcf_per_share", "DCF Fair Value / Share", tg["base"])
-        out["target_base"] = mv("target_base", "Price Target (Base)", tg["base"])
-        out["target_bull"] = mv("target_bull", "Price Target (Bull)", tg["bull"])
-        out["target_bear"] = mv("target_bear", "Price Target (Bear)", tg["bear"])
+        out["target_base"] = mv("target_base", "DCF Value — Base Case", tg["base"])
+        out["target_bull"] = mv("target_bull", "DCF Value — Bull Case", tg["bull"])
+        out["target_bear"] = mv("target_bear", "DCF Value — Bear Case", tg["bear"])
     return out
 
 
