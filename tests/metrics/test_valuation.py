@@ -1,3 +1,4 @@
+import pytest
 from datetime import date
 from stock_analyzer.metrics.valuation import simple_dcf, compute_valuation
 
@@ -12,3 +13,10 @@ def test_compute_valuation_returns_grid():
     out = compute_valuation(fcf0=100, growth=0.05, wacc=0.10, as_of=date(2026, 6, 5))
     assert out["dcf_value"].value > 0
     assert isinstance(out["dcf_value"].value, float)
+
+
+def test_dcf_raises_when_wacc_le_terminal_growth():
+    with pytest.raises(ValueError, match="wacc"):
+        simple_dcf(fcf0=100, growth=0.05, wacc=0.02, terminal_growth=0.03)
+    with pytest.raises(ValueError):
+        simple_dcf(fcf0=100, growth=0.05, wacc=0.02, terminal_growth=0.02)

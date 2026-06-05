@@ -33,7 +33,7 @@ def make_verify_node(structured_factory, ground_truth, tol_rel, tol_abs):
             contradicted=len(contradicted),
             unsupported=sum(v.status == "unsupported" for v in verdicts),
             corrections_applied=contradicted,
-            residual_unverified=[],
+            residual_unverified=[v for v in verdicts if v.status != "supported"],
         ).model_dump()
 
         feedback = "\n".join(f"- {v.correction or v.rationale}" for v in contradicted) or None

@@ -33,7 +33,7 @@ def analyze(
     llm = make_llm(s)
     factory = lambda schema: structured(llm, schema)  # noqa: E731
     bench = provider.get_price_history(benchmark, period).bars["Close"]
-    res = run_analysis(symbol, period, out, provider, factory, bench)
+    res = run_analysis(symbol, period, out, provider, factory, bench, max_revisions=s.max_revisions)
     typer.echo(f"PDF:   {res['pdf']}")
     typer.echo(f"HTML:  {res['html']}")
     typer.echo(f"Audit: {res['audit']}")

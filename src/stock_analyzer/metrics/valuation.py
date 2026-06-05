@@ -3,6 +3,8 @@ from .value import MetricValue
 
 
 def simple_dcf(fcf0: float, growth: float, wacc: float, years: int = 5, terminal_growth: float = 0.02) -> float:
+    if wacc <= terminal_growth:
+        raise ValueError(f"wacc ({wacc}) must exceed terminal_growth ({terminal_growth})")
     pv = 0.0
     fcf = fcf0
     for t in range(1, years + 1):
@@ -27,5 +29,3 @@ def compute_valuation(fcf0: float, growth: float, wacc: float, as_of: date) -> d
     }
 
 
-def sensitivity_grid(fcf0: float, growths: list[float], waccs: list[float]) -> list[list[float]]:
-    return [[round(simple_dcf(fcf0, g, w), 2) for w in waccs] for g in growths]

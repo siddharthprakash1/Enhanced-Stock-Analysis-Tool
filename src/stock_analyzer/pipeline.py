@@ -9,7 +9,7 @@ from .report.pdf import render_pdf
 from .report.html_dashboard import render_dashboard
 
 
-def run_analysis(symbol, period, out_dir, provider, structured_factory, benchmark):
+def run_analysis(symbol, period, out_dir, provider, structured_factory, benchmark, max_revisions: int = 2):
     """Run the full analysis pipeline and write PDF + HTML dashboard to out_dir.
 
     Parameters
@@ -41,7 +41,7 @@ def run_analysis(symbol, period, out_dir, provider, structured_factory, benchmar
     charts = {r.name: r.image_path for r in build_charts(ph.bars, out / "charts")}
 
     # 4. Run the LangGraph multi-agent pipeline
-    app = build_graph(structured_factory, verify=True, ground_truth=gt, max_revisions=2)
+    app = build_graph(structured_factory, verify=True, ground_truth=gt, max_revisions=max_revisions)
     state = app.invoke({"symbol": symbol, "metrics_block": grounding_block(bundle), "revisions": 0})
 
     # 5. Assemble report context
