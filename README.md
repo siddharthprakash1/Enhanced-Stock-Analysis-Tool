@@ -1,86 +1,216 @@
-# Advanced AI-Driven Financial Analytics Platform
+# Enhanced Stock Analysis Tool
 
-## Leveraging Cutting-Edge AI for Sophisticated Market Analysis
+> AI-powered equity analysis with self-verifying reports — no number reaches the report unverified.
 
-This project is a state-of-the-art financial analytics platform that integrates advanced AI technologies to provide comprehensive stock market analysis and insights.
-###### NOTE:The output is the pdf file and for this analysis we have used apple's stock in the past 1yr to make an analysis.
-## Key Technologies and Methodologies
+A Python pipeline that pulls market data, computes a deterministic metrics ground-truth, routes four specialist LangGraph agents to write a research report, runs a verification gate that fact-checks every numeric claim against the ground-truth (loop-correcting until clean), and renders a polished PDF + an interactive HTML dashboard.
 
-- **Multi-Agent AI System**: Utilizes the CrewAI framework to orchestrate a team of specialized AI agents, each focusing on different aspects of financial analysis.
-- **Natural Language Processing**: Employs NLTK for sentiment analysis of financial news and reports, providing nuanced market sentiment insights.
-- **Machine Learning Integration**: Implements scikit-learn for predictive modeling and anomaly detection in financial data streams.
-- **Advanced Language Models**: Integrates with Groq's high-performance AI models via ChatGroqManager for sophisticated text analysis and generation.
-- **Data Visualization**: Leverages Matplotlib and custom visualization tools to create insightful, professional-grade financial charts and graphs.
-- **Real-Time Financial Data Processing**: Utilizes yfinance for efficient retrieval and processing of up-to-date market data.
-- **Quantitative Analysis**: Performs complex financial calculations and statistical analysis using NumPy and Pandas.
-- **Automated Report Generation**: Produces comprehensive, professional reports using python-docx and custom Markdown generators.
+Sample output: [`AAPL_Stock_Analysis_Report.pdf`](AAPL_Stock_Analysis_Report.pdf) · [`AAPL_Stock_Analysis_Report.md`](AAPL_Stock_Analysis_Report.md)
 
-## Core Functionalities
+---
 
-1. **AI-Driven Multi-Faceted Analysis**: 
-   - Fundamental Analysis: In-depth evaluation of financial statements, ratios, and business models.
-   - Technical Analysis: Advanced examination of price trends, patterns, and technical indicators (SMA, EMA, RSI, MACD, Bollinger Bands).
-   - Risk Assessment: Sophisticated analysis of market risks, company-specific risks, and potential mitigation strategies.
-   - Valuation Modeling: Implementation of multiple valuation methodologies including DCF, comparative analysis, and dividend discount models.
+## What it does
 
-2. **Sentiment Analysis Engine**: 
-   - Processes vast amounts of financial news and social media data to gauge market sentiment.
-   - Provides quantitative sentiment scores that feed into the overall analysis.
+1. **Data fetch** — pulls OHLCV bars and fundamental data (yFinance by default; swap to FMP with `FMP_API_KEY`).
+2. **Ground-truth computation** — `MetricsBundle` computes ~30 deterministic metrics (technical, fundamental, risk, valuation, sentiment) from raw data. These become the immutable reference that the agents are grounded in and that the verifier checks against.
+3. **LangGraph crew** — four specialist agents run in parallel (`fundamental`, `technical`, `risk`, `valuation`) and their findings flow into a `writer` agent that drafts a structured report with sections, recommendation, and confidence level.
+4. **Verification gate** — the draft is fact-checked claim-by-claim (see below). Contradicted or unsupported claims trigger a revision loop; the final report includes an audit appendix.
+5. **Rendering** — WeasyPrint renders a print-quality PDF; Plotly builds an interactive HTML dashboard with candlestick chart, KPI strip, and verification table.
 
-3. **Predictive Analytics Module**: 
-   - Utilizes machine learning algorithms to forecast potential market trends and stock performance.
-   - Incorporates both technical and fundamental data for holistic predictions.
+---
 
-4. **Dynamic Data Visualization Suite**: 
-   - Generates a wide array of interactive charts and graphs for clear data representation.
-   - Customizable visualizations to cater to different analytical needs.
+## The verification gate
 
-5. **Automated Comprehensive Reporting**: 
-   - Produces detailed, actionable research reports synthesizing all analyzed aspects.
-   - Tailors reports for different stakeholders - from executive summaries to in-depth analytical breakdowns.
+This is the headline feature. After the writer produces a draft:
 
-## Technical Requirements
+1. **Atomic claim extraction** — a structured LLM call parses the report prose into typed `Claim` objects, each tagged with a metric key, claimed value, and claim type (`numeric`, `directional`, `categorical`, `qualitative`).
+2. **Programmatic + grounded-LLM-judge reconciliation** — numeric claims are checked programmatically against the ground-truth within configurable tolerances (`numeric_tol_rel=1%`, `numeric_tol_abs=0.05`); directional/qualitative claims go to an LLM judge that is itself grounded in the same metrics block so it cannot hallucinate context.
+3. **Revision loop** — any `contradicted` verdict causes the state machine to route back to the `writer` node with correction feedback attached. The loop caps at `max_revisions=2` to prevent runaway cycles.
+4. **Audit appendix** — every verdict (supported / contradicted / corrected) is surfaced in the PDF appendix and the HTML verification table.
 
-- Python 3.7+
-- Dependencies: yfinance, pandas, numpy, scikit-learn, nltk, python-docx, matplotlib, crewai, langchain_ollama, groq
+No number reaches the final report without a `supported` or `corrected` verdict from the gate.
 
-## Setup and Execution
+---
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/advanced-financial-analytics-platform.git
-   cd advanced-financial-analytics-platform
-   ```
+## Architecture
 
+```
+src/stock_analyzer/
+├── config.py              Settings (pydantic-settings; reads .env)
+├── pipeline.py            run_analysis() — top-level orchestrator
+├── cli.py                 Typer CLI (stock-analyzer entrypoint)
+├── data/
+│   ├── models.py          PriceHistory, Fundamentals, NewsItem
+│   ├── base.py            DataProvider ABC
+│   └── yfinance_provider.py
+├── metrics/
+│   ├── bundle.py          MetricsBundle.from_data() — ground truth
+│   ├── technical.py       RSI, MACD, SMA, Bollinger, ATR, ...
+│   ├── fundamental.py     P/E, P/B, ROE, ...
+│   ├── risk.py            Beta, Sharpe, Sortino, VaR, max drawdown
+│   ├── valuation.py       DCF intrinsic value
+│   └── sentiment.py       VADER news sentiment
+├── charts/
+│   └── builders.py        Price/SMA, RSI, MACD, returns dist, drawdown
+├── agents/
+│   ├── state.py           AnalysisState TypedDict + Pydantic schemas
+│   ├── graph.py           build_graph() — LangGraph StateGraph
+│   ├── analysts.py        make_analyst_node() for each role
+│   ├── writer.py          make_writer_node()
+│   └── llm.py             make_llm(), structured(), grounding_block()
+├── verification/
+│   ├── models.py          Claim, Verdict, ClaimList, VerificationAudit
+│   ├── extract.py         make_extract_node()
+│   ├── judge.py           make_verify_node() — programmatic + LLM judge
+│   └── reconcile.py       gate() — conditional edge, audit assembly
+└── report/
+    ├── assemble.py         build_context() — merges draft + GT + charts
+    ├── pdf.py              render_pdf() via WeasyPrint + Jinja2
+    ├── html_dashboard.py   render_dashboard() via Plotly
+    └── templates/          report.html.j2 + styles.css
+```
 
-2. Configure environment for AI model integration:
-   ```python
-   os.environ["OPENAI_API_BASE"] = "http://localhost:11434"
-   os.environ["OPENAI_MODEL_NAME"] = "llama3"
-   os.environ["OPENAI_API_KEY"] = ""  # For Ollama integration
-   ```
+Design documentation:
 
-3. Execute the main analysis script:
-   ```
-   python main_analysis.py
-   ```
+- [`docs/design/00-overview.md`](docs/design/00-overview.md) — goals and constraints
+- [`docs/design/01-architecture.md`](docs/design/01-architecture.md) — module map and data flow
+- [`docs/design/02-engine.md`](docs/design/02-engine.md) — agent and verification design
+- [`docs/design/03-report-design.md`](docs/design/03-report-design.md) — report structure and rendering
+- [`docs/superpowers/plans/2026-06-05-stock-analyzer-revamp.md`](docs/superpowers/plans/2026-06-05-stock-analyzer-revamp.md) — full 8-phase implementation plan
 
-4. Input the required parameters (stock symbol, date range) when prompted.
+---
 
-5. Review the generated report: `{SYMBOL}_Comprehensive_Analysis_Report.md`
+## Tech stack
 
-## Customization and Extensibility
+| Layer | Library |
+|---|---|
+| Language | Python 3.11+ |
+| Agent graph | LangGraph (StateGraph, conditional edges) |
+| LLM integration | LangChain (`langchain-anthropic`, `langchain-google-genai`) |
+| Data validation | Pydantic v2 + pydantic-settings |
+| Data wrangling | pandas, numpy |
+| Charts (static) | mplfinance, matplotlib |
+| Dashboard (interactive) | Plotly |
+| Report templating | Jinja2 |
+| PDF rendering | WeasyPrint |
+| CLI | Typer |
+| Sentiment | VADER (vaderSentiment) |
+| Market data | yFinance (default), FMP (optional) |
 
-The modular architecture allows for easy customization and extension of analysis components. Modify `test.py` to adjust the scope and depth of the financial analysis as needed.
+---
 
-## Contribution Guidelines
+## LLM provider switch
 
-We welcome contributions to enhance the platform's capabilities. Please submit pull requests with a clear description of proposed changes or improvements.
+Two providers are supported; switch with `LLM_PROVIDER` in `.env`.
 
-## License
+| Provider | Model | When to use |
+|---|---|---|
+| `gemini` (default) | `gemini-2.5-flash` | Development / iteration — fast and cheap |
+| `anthropic` | `claude-opus-4-8` | Final production runs — best reasoning quality |
 
-This project is licensed under the MIT License. See the `LICENSE` file for full details.
+Copy `.env.example` to `.env` and fill in your key(s):
+
+```bash
+cp .env.example .env
+```
+
+`.env.example`:
+
+```
+# LLM provider: "gemini" (dev, default) or "anthropic" (final)
+GOOGLE_API_KEY=
+ANTHROPIC_API_KEY=
+
+# Optional reliable data provider (else yfinance is used):
+FMP_API_KEY=
+```
+
+Set `LLM_PROVIDER=anthropic` in `.env` to switch to Claude Opus.
+
+---
+
+## Setup
+
+**Prerequisites (macOS)** — WeasyPrint requires system libraries for PDF rendering:
+
+```bash
+brew install pango cairo gdk-pixbuf libffi
+```
+
+**Install:**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+```
+
+---
+
+## Usage
+
+```bash
+stock-analyzer AAPL --period 1y --out out --benchmark SPY
+```
+
+This writes:
+
+- `out/AAPL_report.pdf` — print-quality PDF with all sections and a verification audit appendix
+- `out/AAPL_dashboard.html` — self-contained interactive HTML dashboard (open in any browser)
+- `out/charts/` — individual PNG chart files embedded in the PDF
+
+**Options:**
+
+```
+Arguments:
+  SYMBOL                  Ticker symbol, e.g. AAPL  [required]
+
+Options:
+  --period TEXT           Look-back window, e.g. 1y, 6mo  [default: 1y]
+  --out TEXT              Output directory for PDF + HTML  [default: out]
+  --benchmark TEXT        Benchmark ticker for beta/Sharpe  [default: SPY]
+```
+
+---
+
+## Testing
+
+The test suite is fully offline — all network calls and LLM invocations are replaced with in-process fakes (fake data provider, fake structured-output LLM). No API keys are needed to run tests.
+
+```bash
+pytest
+```
+
+Expected: ~39 tests, all passing.
+
+```
+tests/
+├── test_config.py             Settings defaults
+├── test_smoke.py              Package import smoke test
+├── test_pipeline.py           End-to-end pipeline (PDF + HTML produced)
+├── test_cli.py                Typer CLI --help smoke test
+├── agents/                    Analyst nodes, writer, graph wiring
+├── charts/                    Chart builder outputs
+├── data/                      Provider, models
+├── metrics/                   Technical, fundamental, risk, valuation, sentiment
+├── report/                    PDF, dashboard, context assembly
+├── verification/              Claim extraction, judge, reconcile, gate
+└── fixtures/prices.py         linear_prices() — deterministic fake OHLCV data
+```
+
+---
+
+## Legacy
+
+The `legacy/` directory contains the original 2-year-old implementation built with CrewAI and Groq, preserved for reference. The current codebase is a ground-up rewrite with a verified-report architecture, a LangGraph multi-agent pipeline, and a full offline test suite.
+
+---
 
 ## Disclaimer
 
-This tool is designed for advanced financial analysis and research purposes. While it employs sophisticated methodologies, all investment decisions should be made in consultation with qualified financial advisors.
+This tool is for research and educational purposes. It is not financial advice. All investment decisions should be made in consultation with qualified financial advisors.
+
+---
+
+## License
+
+MIT
