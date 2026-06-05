@@ -7,6 +7,7 @@ dependencies = [
   "yfinance>=0.2.40", "matplotlib>=3.8", "plotly>=5.22",
   "langgraph>=0.2.0", "langchain-anthropic>=0.3.0", "langchain-google-genai>=2.0.0", "langchain-core>=0.3.0",
   "jinja2>=3.1", "weasyprint>=62", "typer>=0.12", "vaderSentiment>=3.3.2",
+  "mplfinance>=0.12.10b0",
 ]
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-mock>=3.14", "ruff>=0.5"]

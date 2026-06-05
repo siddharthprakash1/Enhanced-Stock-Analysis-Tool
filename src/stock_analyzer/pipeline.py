@@ -45,7 +45,15 @@ def run_analysis(symbol, period, out_dir, provider, structured_factory, benchmar
     state = app.invoke({"symbol": symbol, "metrics_block": grounding_block(bundle), "revisions": 0})
 
     # 5. Assemble report context
-    ctx = build_context(symbol, state["report"], gt, state.get("audit", {}), charts)
+    from .metrics.valuation import sensitivity_grid
+    fcf0 = fund.free_cash_flow or 100.0
+    sens = {
+        "growths": [0.03, 0.05, 0.07],
+        "waccs": [0.08, 0.10, 0.12],
+        "grid": sensitivity_grid(fcf0, [0.03, 0.05, 0.07], [0.08, 0.10, 0.12]),
+    }
+    ctx = build_context(symbol, state["report"], gt, state.get("audit", {}), charts,
+                        company=fund.name, news=news, sensitivity=sens)
 
     # 6. Render PDF (base_url = out dir so file:// image embeds work)
     render_pdf(ctx, out / f"{symbol}_report.pdf")

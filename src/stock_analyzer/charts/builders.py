@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")  # headless — must precede pyplot import
 import matplotlib.pyplot as plt
+import mplfinance as mpf
 from pydantic import BaseModel
 from ..tokens import COLORS
 from .theme import apply_theme
@@ -54,4 +55,12 @@ def build_charts(bars: pd.DataFrame, out_dir) -> list[ChartRef]:
     fig, ax = plt.subplots(figsize=(9, 2.5)); ax.fill_between(dd.index, dd, color=COLORS["down"], alpha=0.4); ax.set_title("Drawdown")
     refs.append(ChartRef(name="drawdown", image_path=_save(fig, out / "drawdown.png"),
                          caption="Drawdown curve", fact={"max_drawdown": round(float(dd.min()), 4)}))
+
+    cs_path = out / "candlestick.png"
+    mpf.plot(bars, type="candle", style="yahoo", mav=(50, 200), volume=True,
+             figsize=(9, 5), savefig=dict(fname=str(cs_path), dpi=200, bbox_inches="tight"))
+    plt.close("all")
+    refs.append(ChartRef(name="candlestick", image_path=str(cs_path),
+                         caption="Candlestick with SMA 50/200 and volume",
+                         fact={"last_close": round(float(c.iloc[-1]), 2)}))
     return refs

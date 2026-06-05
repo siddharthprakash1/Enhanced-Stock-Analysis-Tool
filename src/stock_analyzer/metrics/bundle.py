@@ -32,7 +32,9 @@ class MetricsBundle(BaseModel):
         m.update(compute_technical(ph.bars))
         m.update(compute_fundamental(fundamentals, as_of))
         m.update(compute_risk(ph.bars, benchmark_close))
-        m.update(compute_valuation(fcf0, growth, wacc, as_of))
+        fcf0_real = fundamentals.free_cash_flow or fcf0
+        m.update(compute_valuation(fcf0_real, growth, wacc, as_of,
+                                   shares_outstanding=fundamentals.shares_outstanding))
         m.update(compute_sentiment(news, as_of))
         return cls(symbol=ph.symbol, period=ph.period, metrics=m)
 

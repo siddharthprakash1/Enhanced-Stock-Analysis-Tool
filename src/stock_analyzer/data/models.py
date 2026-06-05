@@ -27,6 +27,9 @@ class Fundamentals(BaseModel):
     sector: str | None = None
     industry: str | None = None
     beta_reported: float | None = None
+    name: str | None = None
+    free_cash_flow: float | None = None
+    shares_outstanding: float | None = None
 
 class NewsItem(BaseModel):
     title: str

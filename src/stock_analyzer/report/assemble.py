@@ -9,11 +9,12 @@ SECTION_TITLES = {
     "technical": "Technical Analysis", "fundamental": "Fundamental Analysis",
     "risk": "Risk Assessment", "valuation": "Valuation & Forecast", "recommendation": "Recommendation",
 }
-SECTION_CHARTS = {"technical": ["price", "rsi", "macd"], "risk": ["returns_dist", "drawdown"]}
+SECTION_CHARTS = {"technical": ["candlestick", "rsi", "macd"], "risk": ["returns_dist", "drawdown"]}
 CHART_CAPTIONS = {
     "price": "Price with 50- and 200-day moving averages", "rsi": "Relative Strength Index (14-day)",
     "macd": "MACD vs. signal line", "returns_dist": "Distribution of daily returns",
     "drawdown": "Drawdown from the running peak",
+    "candlestick": "Candlestick with SMA 50/200 and volume",
 }
 
 
@@ -31,7 +32,7 @@ def _charts_for(section_id, charts):
     return out
 
 
-def build_context(symbol, draft, ground_truth, audit, charts):
+def build_context(symbol, draft, ground_truth, audit, charts, company=None, news=None, sensitivity=None):
     as_of = ""
     if ground_truth:
         mv0 = next(iter(ground_truth.values()))
@@ -45,7 +46,37 @@ def build_context(symbol, draft, ground_truth, audit, charts):
     } for s in draft.sections]
     residual = [{"status": v.get("status"), "note": v.get("correction") or v.get("rationale") or ""}
                 for v in (audit.get("residual_unverified") or [])]
+
+    by_cat = {}
+    for mv in (ground_truth or {}).values():
+        by_cat.setdefault(mv.category, []).append({"label": mv.label, "value": mv.display()})
+
+    def tgt(key):
+        return ground_truth[key].display() if key in ground_truth else None
+
+    last = ground_truth.get("last_close")
+    targets = None
+    if "target_base" in ground_truth:
+        def upside(key):
+            if last and last.value and ground_truth[key].value is not None:
+                return f"{(ground_truth[key].value / last.value - 1) * 100:+.1f}%"
+            return ""
+        targets = {
+            "base": tgt("target_base"), "bull": tgt("target_bull"), "bear": tgt("target_bear"),
+            "base_upside": upside("target_base"), "bull_upside": upside("target_bull"),
+            "bear_upside": upside("target_bear"),
+        }
+
     return {
         "symbol": symbol, "recommendation": draft.recommendation, "confidence": draft.confidence,
         "as_of": as_of, "kpis": kpis, "sections": sections, "audit": audit, "residual": residual,
+        "company": company or symbol,
+        "price": ground_truth["last_close"].display() if "last_close" in ground_truth else "",
+        "targets": targets,
+        "fundamentals_table": by_cat.get("fundamental", []),
+        "risk_table": by_cat.get("risk", []),
+        "valuation_table": by_cat.get("valuation", []),
+        "metrics_appendix": [{"category": cat.title(), "rows": rows} for cat, rows in by_cat.items()],
+        "news": [{"title": n.title} for n in (news or [])][:10],
+        "sensitivity": sensitivity,
     }

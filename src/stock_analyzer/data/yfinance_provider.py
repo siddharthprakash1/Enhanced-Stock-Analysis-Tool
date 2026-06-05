@@ -21,6 +21,9 @@ class YFinanceProvider:
             dividend_yield=info.get("dividendYield"), profit_margin=info.get("profitMargins"),
             revenue_growth=info.get("revenueGrowth"), sector=info.get("sector"),
             industry=info.get("industry"), beta_reported=info.get("beta"),
+            name=info.get("longName") or info.get("shortName"),
+            free_cash_flow=info.get("freeCashflow"),
+            shares_outstanding=info.get("sharesOutstanding"),
         )
 
     def get_news(self, symbol: str, limit: int = 20) -> list[NewsItem]:
