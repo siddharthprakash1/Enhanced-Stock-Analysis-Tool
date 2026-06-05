@@ -21,6 +21,13 @@ class Verdict(BaseModel):
     correction: str | None = None
 
 
+class JudgeVerdict(BaseModel):
+    """Minimal schema the LLM judge fills — numeric fields are set in code, not by the model."""
+    status: Literal["supported", "contradicted", "unsupported"]
+    rationale: str
+    correction: str | None = None
+
+
 class ClaimList(BaseModel):
     claims: list[Claim]
 
