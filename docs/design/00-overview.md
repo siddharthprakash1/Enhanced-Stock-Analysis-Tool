@@ -18,7 +18,7 @@ A deterministic **`MetricsBundle`** (the exact computed numbers) is the ground t
 | Decision | Choice |
 |---|---|
 | Scope | Rebuild fresh; reuse the solid financial math from old `test.py`/`tools.py`, restructure everything else |
-| LLM | **Claude Opus 4.8** (`claude-opus-4-8`) via `langchain-anthropic` `ChatAnthropic`; adaptive thinking + `effort`; structured output via `.with_structured_output()`; prompt-cache the `MetricsBundle` |
+| LLM | **Provider-swappable** via LangChain: **Gemini** (`gemini-2.5-flash`, `langchain-google-genai`) for dev/testing to save tokens; **Claude Opus 4.8** (`claude-opus-4-8`, `langchain-anthropic`) for final runs. Both expose `.with_structured_output()`; default `llm_provider=gemini`. Prompt-cache the `MetricsBundle`. |
 | Orchestration | **LangGraph** state graph — parallel analyst fan-out + conditional verification-loop edge |
 | Data | **yfinance** default (zero-config) behind a `DataProvider` interface; optional keyed FMP / Alpha Vantage provider |
 | Output | **Polished PDF** (Jinja2 + WeasyPrint) **AND** interactive **HTML dashboard** (Plotly) |
