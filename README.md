@@ -90,7 +90,7 @@ Design documentation:
 | LLM integration | LangChain (`langchain-anthropic`, `langchain-google-genai`) |
 | Data validation | Pydantic v2 + pydantic-settings |
 | Data wrangling | pandas, numpy |
-| Charts (static) | mplfinance, matplotlib |
+| Charts (static) | matplotlib |
 | Dashboard (interactive) | Plotly |
 | Report templating | Jinja2 |
 | PDF rendering | WeasyPrint |
@@ -153,7 +153,7 @@ pip install -e ".[dev]"
 ## Usage
 
 ```bash
-stock-analyzer AAPL --period 1y --out out --benchmark SPY
+stock-analyzer analyze AAPL --period 1y --out out --benchmark SPY
 ```
 
 This writes:
