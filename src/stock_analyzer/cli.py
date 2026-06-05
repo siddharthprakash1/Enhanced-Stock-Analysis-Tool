@@ -10,6 +10,11 @@ import typer
 app = typer.Typer(help="AI-powered equity analysis with self-verifying reports.")
 
 
+@app.callback()
+def _main() -> None:
+    """Keep 'analyze' as an explicit subcommand (e.g. `stock-analyzer analyze AAPL`)."""
+
+
 @app.command()
 def analyze(
     symbol: str = typer.Argument(..., help="Ticker symbol, e.g. AAPL"),
