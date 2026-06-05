@@ -12,10 +12,11 @@ def make_llm(settings: Settings):
         limiter = InMemoryRateLimiter(requests_per_second=0.075, check_every_n_seconds=0.1, max_bucket_size=1)
         return ChatGoogleGenerativeAI(model=settings.gemini_model, google_api_key=settings.google_api_key,
                                       temperature=0, rate_limiter=limiter, max_retries=3)
-    from langchain_anthropic import ChatAnthropic  # Opus 4.8: adaptive thinking + effort
-    return ChatAnthropic(model=settings.model, max_tokens=8000, anthropic_api_key=settings.anthropic_api_key,
-                         model_kwargs={"thinking": {"type": "adaptive"},
-                                       "output_config": {"effort": settings.effort}})
+    from langchain_anthropic import ChatAnthropic
+    # Opus 4.8: adaptive thinking (native param). Validate with a real ANTHROPIC_API_KEY before production.
+    return ChatAnthropic(model=settings.model, max_tokens=16000,
+                         anthropic_api_key=settings.anthropic_api_key,
+                         thinking={"type": "adaptive"})
 
 
 def structured(llm, schema):

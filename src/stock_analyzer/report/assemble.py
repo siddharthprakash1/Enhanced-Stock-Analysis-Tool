@@ -1,3 +1,5 @@
+from pathlib import Path
+
 HERO_KEYS = ["last_close", "pe_ratio", "rsi_14", "beta", "sharpe", "max_drawdown", "var_95"]
 
 
@@ -15,7 +17,7 @@ def build_context(symbol, draft, ground_truth, audit, charts):
             {
                 "id": s.id,
                 "prose": s.prose,
-                "charts": [charts.get(c) for c in s.charts if charts.get(c)],
+                "charts": [Path(charts[c]).resolve().as_uri() for c in s.charts if charts.get(c)],
             }
             for s in draft.sections
         ],

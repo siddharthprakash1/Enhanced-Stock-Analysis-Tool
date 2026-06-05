@@ -1,3 +1,4 @@
+import pandas as pd
 import yfinance as yf
 from .models import PriceHistory, Fundamentals, NewsItem
 from .base import DataUnavailableError
@@ -7,7 +8,7 @@ class YFinanceProvider:
         df = yf.download(symbol, period=period, auto_adjust=False, progress=False)
         if df is None or df.empty:
             raise DataUnavailableError(symbol, "price_history")
-        if hasattr(df.columns, "nlevels") and df.columns.nlevels > 1:
+        if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
         return PriceHistory(symbol=symbol, period=period, bars=df[["Open","High","Low","Close","Volume"]])
 
