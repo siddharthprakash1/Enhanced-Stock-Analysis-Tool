@@ -1,0 +1,10 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>{{ css }}</style></head><body>
+<header><div class="label">EQUITY ANALYSIS</div><h1>{{ symbol }}</h1>
+<span class="pill">{{ recommendation|upper }} · {{ confidence }}</span></header>
+<div class="strip">{% for k in kpis %}<div class="kpi"><div class="k-label">{{ k.label }}</div>
+<div class="k-val">{{ k.value }}{{ k.unit }}</div></div>{% endfor %}</div>
+{% for s in sections %}<section><h2>{{ s.id|replace("_"," ")|title }}</h2><p>{{ s.prose }}</p>
+{% for img in s.charts %}<img src="file://{{ img }}"/>{% endfor %}</section>{% endfor %}
+<section class="verify"><h2>Verification</h2><p>{{ audit.supported }} supported · {{ audit.contradicted }} contradicted ·
+{{ audit.unsupported }} unsupported (of {{ audit.total_claims }}).</p></section>
+</body></html>
