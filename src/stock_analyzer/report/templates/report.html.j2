@@ -8,6 +8,7 @@
 
 <div class="title-row">
   <div class="title-left">
+    {% if logo %}<img class="logo" src="{{ logo }}"/>{% endif %}
     <h1 id="doctitle">{{ company or symbol }}</h1>
     <div class="tick">{{ symbol }}</div>
   </div>

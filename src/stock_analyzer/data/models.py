@@ -37,6 +37,7 @@ class Fundamentals(BaseModel):
     total_debt: float | None = None
     quote_type: str | None = None        # EQUITY | ETF | MUTUALFUND | INDEX | CRYPTOCURRENCY ...
     currency: str | None = None
+    website: str | None = None           # company homepage; used to resolve a logo
 
     @property
     def is_operating_company(self) -> bool:

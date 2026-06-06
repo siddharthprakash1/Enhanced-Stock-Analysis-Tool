@@ -33,7 +33,7 @@ def _charts_for(section_id, charts):
 
 
 def build_context(symbol, draft, ground_truth, audit, charts, company=None, news=None,
-                  sensitivity=None, assumptions=None, comps=None, currency=None):
+                  sensitivity=None, assumptions=None, comps=None, currency=None, logo=None):
     as_of = ""
     if ground_truth:
         mv0 = next(iter(ground_truth.values()))
@@ -86,6 +86,7 @@ def build_context(symbol, draft, ground_truth, audit, charts, company=None, news
         "assumptions": assumptions,
         "comps": comps,
         "currency": currency,
+        "logo": (Path(logo).resolve().as_uri() if logo else None),
         "metrics_appendix": [{"category": cat.title(), "rows": rows} for cat, rows in by_cat.items()],
         "news": [{"title": n.title} for n in (news or [])][:10],
         "sensitivity": sensitivity,

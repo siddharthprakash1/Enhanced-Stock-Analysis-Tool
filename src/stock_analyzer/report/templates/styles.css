@@ -15,6 +15,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: #1f2733; font-size: 9.3
 
 .title-row { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2.5px solid #0A2540; padding: 12px 0 11px; margin-bottom: 14px; }
 h1 { font-family: Georgia, 'Times New Roman', serif; font-size: 25pt; font-weight: 700; color: #0A2540; margin: 0; letter-spacing: -0.3px; }
+.logo { height: 34px; max-width: 175px; width: auto; object-fit: contain; display: block; margin-bottom: 7px; }
 #doctitle { string-set: doctitle content(text); }
 .tick { font-size: 9pt; color: #6b7280; font-weight: 700; letter-spacing: 1.5px; margin-top: 3px; }
 

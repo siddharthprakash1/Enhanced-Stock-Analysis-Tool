@@ -42,6 +42,7 @@ class YFinanceProvider:
             ebitda=info.get("ebitda"), enterprise_value=info.get("enterpriseValue"),
             total_debt=info.get("totalDebt"), quote_type=info.get("quoteType"),
             currency=info.get("currency") or info.get("financialCurrency"),
+            website=info.get("website"),
         )
 
     def get_risk_free_rate(self) -> float | None:

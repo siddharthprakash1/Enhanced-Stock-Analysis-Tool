@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from .data.models import Fundamentals
+from .data.logo import fetch_logo
 from .metrics.bundle import MetricsBundle
 from .metrics.risk import compute_beta
 from .metrics.wacc import compute_wacc
@@ -81,6 +82,9 @@ def run_analysis(
     news = provider.get_news(symbol)
     as_of = ph.bars.index[-1].date()
 
+    # Company logo (best-effort; only attempted when a website is known, so offline runs skip it)
+    logo = fetch_logo(fund.website, symbol, out / "logo.png") if getattr(fund, "website", None) else None
+
     # 2. Discount rate (WACC) + growth + valuation inputs (None => skip valuation)
     rf = _resolve_risk_free(provider, risk_free_rate)
     beta = compute_beta(ph.bars["Close"], benchmark)
@@ -123,7 +127,7 @@ def run_analysis(
     ctx = build_context(symbol, state["report"], gt, state.get("audit", {}), charts,
                         company=fund.name, news=news, sensitivity=sens,
                         assumptions=assumptions, comps=_comps_view(comps),
-                        currency=(fund.currency or ph.currency))
+                        currency=(fund.currency or ph.currency), logo=logo)
 
     # 8. Render PDF
     render_pdf(ctx, out / f"{symbol}_report.pdf")
