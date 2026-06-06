@@ -30,6 +30,18 @@ class Fundamentals(BaseModel):
     name: str | None = None
     free_cash_flow: float | None = None
     shares_outstanding: float | None = None
+    # --- relative valuation / WACC inputs ---
+    enterprise_to_ebitda: float | None = None
+    ebitda: float | None = None
+    enterprise_value: float | None = None
+    total_debt: float | None = None
+    quote_type: str | None = None        # EQUITY | ETF | MUTUALFUND | INDEX | CRYPTOCURRENCY ...
+    currency: str | None = None
+
+    @property
+    def is_operating_company(self) -> bool:
+        """True for entities a DCF/comps analysis makes sense for (not ETFs/funds/indices)."""
+        return (self.quote_type or "EQUITY").upper() == "EQUITY"
 
 class NewsItem(BaseModel):
     title: str

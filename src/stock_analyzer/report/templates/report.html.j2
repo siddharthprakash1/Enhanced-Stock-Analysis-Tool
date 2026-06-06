@@ -34,19 +34,28 @@
 </section>
 {% endfor %}
 
-{% if fundamentals_table or risk_table or valuation_table or sensitivity %}
+{% if fundamentals_table or risk_table or valuation_table or sensitivity or comps or assumptions %}
 <section class="rpt">
   <h2><span class="num sym">&#9635;</span>Financial Detail</h2>
   <div class="two-col">
     {% if fundamentals_table %}<div><h3>Fundamentals</h3><table class="data"><tbody>{% for r in fundamentals_table %}<tr><td>{{ r.label }}</td><td>{{ r.value }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
     {% if risk_table %}<div><h3>Risk Metrics</h3><table class="data"><tbody>{% for r in risk_table %}<tr><td>{{ r.label }}</td><td>{{ r.value }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
   </div>
+  {% if comps %}<h3>Relative Valuation &mdash; {{ symbol }} vs. Sector Peers</h3>
+  <table class="data comps">
+    <thead><tr><th>Multiple</th><th>{{ comps.subject }}</th><th>Peer Median</th><th>vs. Peers</th></tr></thead>
+    <tbody>{% for r in comps.rows %}<tr><td>{{ r.label }}</td><td>{{ r.subject }}</td><td>{{ r.median }}</td><td>{{ r.premium or "—" }}</td></tr>{% endfor %}</tbody>
+  </table>
+  <p class="fine">Peer set: {{ comps.tickers|join(", ") }}. &ldquo;vs. Peers&rdquo; is the subject&rsquo;s premium (+) or discount (&minus;) to the peer-group median.</p>{% endif %}
   {% if valuation_table %}<h3>Valuation</h3><table class="data"><tbody>{% for r in valuation_table %}<tr><td>{{ r.label }}</td><td>{{ r.value }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+  {% if assumptions %}<h3>DCF Assumptions</h3><table class="data assum"><tbody>{% for a in assumptions %}<tr><td>{{ a.label }}</td><td>{{ a.value }}</td></tr>{% endfor %}</tbody></table>
+  <p class="fine">WACC derived from CAPM (cost of equity = risk-free + &beta;&middot;ERP) blended with after-tax cost of debt by capital weights. Growth taken from company fundamentals; risk-free rate is the live 10Y US Treasury yield.</p>{% endif %}
   {% if sensitivity %}<h3>DCF Enterprise Value Sensitivity ($B)</h3>
   <table class="sens">
     <thead><tr><th>Growth&nbsp;\&nbsp;WACC</th>{% for w in sensitivity.waccs %}<th>{{ (w*100)|round|int }}%</th>{% endfor %}</tr></thead>
-    <tbody>{% for row in sensitivity.grid %}<tr><th>{{ (sensitivity.growths[loop.index0]*100)|round|int }}%</th>{% for v in row %}<td>{{ "{:,.0f}".format(v / 1000000000) }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+    <tbody>{% for row in sensitivity.grid %}<tr><th>{{ (sensitivity.growths[loop.index0]*100)|round|int }}%</th>{% for v in row %}<td>{% if v is not none %}{{ "{:,.0f}".format(v / 1000000000) }}{% else %}&mdash;{% endif %}</td>{% endfor %}</tr>{% endfor %}</tbody>
   </table>{% endif %}
+  {% if not valuation_available and not comps %}<p class="na-note">A discounted-cash-flow valuation is not applicable to this security (no positive free-cash-flow data available). Coverage is limited to price, technical, fundamental and risk metrics.</p>{% endif %}
 </section>
 {% endif %}
 

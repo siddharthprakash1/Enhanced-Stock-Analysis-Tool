@@ -55,6 +55,11 @@ table.sens th { background: #f4f6f9; color: #0A2540; padding: 4px 6px; border: 1
 table.sens td { padding: 4px 6px; border: 1px solid #eef0f3; text-align: right; font-family: 'SF Mono', Menlo, monospace; color: #1f2733; }
 table.sens tbody th { text-align: right; font-family: 'SF Mono', Menlo, monospace; background: #fafbfc; }
 
+table.data.comps th:not(:first-child), table.data.comps td:not(:first-child) { text-align: right; }
+table.data.comps td:not(:first-child) { font-family: 'SF Mono', Menlo, monospace; font-weight: 600; color: #0A2540; }
+.fine { font-size: 7pt; color: #8a94a6; font-style: italic; margin: 3px 0 7px; }
+.na-note { font-size: 8.4pt; color: #5b6470; background: #f7f8fa; border-left: 3px solid #b8860b; padding: 6px 10px; margin-top: 6px; text-align: left; }
+
 ul.news { margin: 4px 0 0; padding-left: 15px; }
 ul.news li { font-size: 8.6pt; margin-bottom: 3px; color: #2a3340; }
 

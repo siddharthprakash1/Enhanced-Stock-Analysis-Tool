@@ -10,7 +10,7 @@ A crew of LangGraph agents writes an institutional-style note — and a <b>verif
   <img alt="Python 3.11+" src="https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white">
   <img alt="LangGraph" src="https://img.shields.io/badge/orchestration-LangGraph-1C3C3C">
   <img alt="LLM" src="https://img.shields.io/badge/LLM-Claude%20%7C%20Gemini-D97757">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-43%20passing-2EA043">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-71%20passing-2EA043">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-blue">
 </p>
 
@@ -30,7 +30,7 @@ Most "AI report" tools let the model write numbers straight onto the page — an
 <p align="center">
   <img src="docs/assets/verify.png" width="780" alt="Verification audit from the generated report showing a caught contradiction">
 </p>
-<p align="center"><sub>Live AAPL run on Claude Haiku 4.5 — the gate auto-flagged a wrong "bullish MACD crossover" claim (MACD 8.46 was <i>below</i> its 9.40 signal line).</sub></p>
+<p align="center"><sub>Live AAPL run on Claude Haiku 4.5 — the gate reconciled 37 claims and auto-flagged 2 bad DCF downside figures the writer got wrong.</sub></p>
 
 ## 🔁 How it works
 
@@ -101,8 +101,9 @@ Swap with one env var — both run through LangChain's `.with_structured_output(
 |---|---|
 | **Cover** | Rating box + 7-metric key-stats panel |
 | **Charts** | Candlestick + SMA/volume, RSI, MACD, returns, drawdown |
-| **Tables** | Fundamentals, risk & valuation |
-| **DCF** | Enterprise-value sensitivity grid (growth × WACC) |
+| **Valuation** | DCF with a **CAPM-derived WACC** + explicit assumptions, bull/base/bear, growth × WACC sensitivity grid |
+| **Comps** | Relative valuation vs. sector peers (P/E, P/B, EV/EBITDA, margin, growth) — premium/discount to peer median |
+| **Tables** | Fundamentals & risk metrics |
 | **Appendix** | Headlines, verification audit, full metrics, disclosures |
 
 <sub>_Running headers + page numbers throughout._</sub>
@@ -161,7 +162,7 @@ src/stock_analyzer/
 ## 🧪 Tests
 
 ```bash
-pytest          # 43 tests — all passing
+pytest          # 71 tests — all passing
 ```
 
 The suite is **fully offline** — network and LLM calls are faked in-process, so no API keys needed.

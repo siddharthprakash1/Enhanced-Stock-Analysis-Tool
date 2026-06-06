@@ -7,6 +7,17 @@ def _pct(x):
     return x * 100 if (x is not None and x == x) else x  # x==x is False for NaN
 
 
+def compute_beta(close: pd.Series, benchmark_close: pd.Series) -> float | None:
+    """Beta of the security vs. the benchmark over the aligned return window."""
+    ret = close.pct_change().dropna()
+    bret = benchmark_close.pct_change().reindex(ret.index).dropna()
+    aligned = ret.reindex(bret.index)
+    if not bret.var():
+        return None
+    b = aligned.cov(bret) / bret.var()
+    return None if b is None or pd.isna(b) else float(b)
+
+
 def compute_risk(bars: pd.DataFrame, benchmark_close: pd.Series, rf: float = 0.0) -> dict[str, MetricValue]:
     as_of = bars.index[-1].date()
     c = bars["Close"]
@@ -22,9 +33,7 @@ def compute_risk(bars: pd.DataFrame, benchmark_close: pd.Series, rf: float = 0.0
             as_of=as_of,
         )
 
-    bret = benchmark_close.pct_change().reindex(ret.index).dropna()
-    aligned = ret.reindex(bret.index)
-    beta = aligned.cov(bret) / bret.var() if bret.var() else None
+    beta = compute_beta(c, benchmark_close)
 
     hv = ret.std() * np.sqrt(252)
 

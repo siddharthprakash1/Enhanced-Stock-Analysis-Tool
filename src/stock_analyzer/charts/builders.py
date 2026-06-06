@@ -57,10 +57,17 @@ def build_charts(bars: pd.DataFrame, out_dir) -> list[ChartRef]:
                          caption="Drawdown curve", fact={"max_drawdown": round(float(dd.min()), 4)}))
 
     cs_path = out / "candlestick.png"
-    mpf.plot(bars, type="candle", style="yahoo", mav=(50, 200), volume=True,
-             figsize=(9, 5), savefig=dict(fname=str(cs_path), dpi=200, bbox_inches="tight"))
-    plt.close("all")
-    refs.append(ChartRef(name="candlestick", image_path=str(cs_path),
-                         caption="Candlestick with SMA 50/200 and volume",
-                         fact={"last_close": round(float(c.iloc[-1]), 2)}))
+    mav = tuple(w for w in (50, 200) if w < len(bars))  # only MAs the data can support
+    try:
+        kwargs = dict(type="candle", style="yahoo", volume=True, figsize=(9, 5),
+                      savefig=dict(fname=str(cs_path), dpi=200, bbox_inches="tight"))
+        if mav:
+            kwargs["mav"] = mav
+        mpf.plot(bars, **kwargs)
+        plt.close("all")
+        cap = "Candlestick with SMA 50/200 and volume" if mav else "Candlestick with volume"
+        refs.append(ChartRef(name="candlestick", image_path=str(cs_path), caption=cap,
+                             fact={"last_close": round(float(c.iloc[-1]), 2)}))
+    except Exception:
+        plt.close("all")  # thin/degenerate data — skip the candlestick rather than fail the report
     return refs

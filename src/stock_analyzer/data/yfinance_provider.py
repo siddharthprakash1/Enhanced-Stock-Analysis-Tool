@@ -3,6 +3,20 @@ import yfinance as yf
 from .models import PriceHistory, Fundamentals, NewsItem
 from .base import DataUnavailableError
 
+
+def _normalize_tnx(raw: float) -> float | None:
+    """Raw ^TNX close -> decimal yield (e.g. 0.0455), or None if implausible/mis-scaled.
+
+    ^TNX is usually quoted in percent (4.55); some feeds scale it x10 (45.5). We de-scale
+    only a clearly x10 value (>30) and reject anything outside a credible 0.5%-10% band so
+    a glitchy feed makes the caller fall back to the configured default rather than poison
+    the WACC with a bogus rate.
+    """
+    if raw > 30:
+        raw /= 10.0
+    rate = raw / 100.0
+    return rate if 0.005 <= rate <= 0.10 else None
+
 class YFinanceProvider:
     def get_price_history(self, symbol: str, period: str) -> PriceHistory:
         df = yf.download(symbol, period=period, auto_adjust=False, progress=False)
@@ -24,7 +38,26 @@ class YFinanceProvider:
             name=info.get("longName") or info.get("shortName"),
             free_cash_flow=info.get("freeCashflow"),
             shares_outstanding=info.get("sharesOutstanding"),
+            enterprise_to_ebitda=info.get("enterpriseToEbitda"),
+            ebitda=info.get("ebitda"), enterprise_value=info.get("enterpriseValue"),
+            total_debt=info.get("totalDebt"), quote_type=info.get("quoteType"),
+            currency=info.get("currency") or info.get("financialCurrency"),
         )
+
+    def get_risk_free_rate(self) -> float | None:
+        """Live 10-year US Treasury yield from ^TNX, as a decimal (e.g. 0.0455).
+
+        Returns None on any failure so the caller can fall back to a configured default.
+        """
+        try:
+            df = yf.download("^TNX", period="5d", auto_adjust=False, progress=False)
+            if df is None or df.empty:
+                return None
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            return _normalize_tnx(float(df["Close"].dropna().iloc[-1]))
+        except Exception:
+            return None
 
     def get_news(self, symbol: str, limit: int = 20) -> list[NewsItem]:
         raw = getattr(yf.Ticker(symbol), "news", []) or []

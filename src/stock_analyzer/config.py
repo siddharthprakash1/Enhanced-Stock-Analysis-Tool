@@ -14,3 +14,14 @@ class Settings(BaseSettings):
     numeric_tol_abs: float = 0.05
     provider: str = "yfinance"
     out_dir: str = "out"
+
+    # --- DCF / WACC assumptions (macro inputs; fetched live where possible, these are fallbacks) ---
+    risk_free_rate: float = 0.0455       # 10Y UST, ~Jun 2026 (fallback if ^TNX fetch fails)
+    equity_risk_premium: float = 0.0423  # Damodaran 2026 implied US ERP
+    tax_rate: float = 0.21               # US federal statutory corporate rate
+    cost_of_debt_spread: float = 0.015   # over risk-free; investment-grade approximation
+    terminal_growth: float = 0.02        # perpetuity growth
+    dcf_years: int = 5
+    growth_default: float = 0.05         # used when company growth signals are unavailable
+    growth_min: float = 0.0
+    growth_max: float = 0.15             # clamp company-derived growth to a sane band

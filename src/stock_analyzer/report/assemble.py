@@ -32,7 +32,8 @@ def _charts_for(section_id, charts):
     return out
 
 
-def build_context(symbol, draft, ground_truth, audit, charts, company=None, news=None, sensitivity=None):
+def build_context(symbol, draft, ground_truth, audit, charts, company=None, news=None,
+                  sensitivity=None, assumptions=None, comps=None, currency=None):
     as_of = ""
     if ground_truth:
         mv0 = next(iter(ground_truth.values()))
@@ -49,7 +50,12 @@ def build_context(symbol, draft, ground_truth, audit, charts, company=None, news
 
     by_cat = {}
     for mv in (ground_truth or {}).values():
-        by_cat.setdefault(mv.category, []).append({"label": mv.label, "value": mv.display()})
+        by_cat.setdefault(mv.category, []).append({"key": mv.key, "label": mv.label, "value": mv.display()})
+
+    # Rate/comps-summary metrics live in the assumptions & comps blocks (and the
+    # appendix), so keep them out of the headline Valuation table to avoid dupes.
+    _ASSUMPTION_KEYS = {"wacc", "cost_of_equity", "cost_of_debt", "peer_median_pe", "pe_premium_to_peers"}
+    valuation_table = [r for r in by_cat.get("valuation", []) if r["key"] not in _ASSUMPTION_KEYS]
 
     def tgt(key):
         return ground_truth[key].display() if key in ground_truth else None
@@ -75,7 +81,11 @@ def build_context(symbol, draft, ground_truth, audit, charts, company=None, news
         "targets": targets,
         "fundamentals_table": by_cat.get("fundamental", []),
         "risk_table": by_cat.get("risk", []),
-        "valuation_table": by_cat.get("valuation", []),
+        "valuation_table": valuation_table,
+        "valuation_available": bool(valuation_table),
+        "assumptions": assumptions,
+        "comps": comps,
+        "currency": currency,
         "metrics_appendix": [{"category": cat.title(), "rows": rows} for cat, rows in by_cat.items()],
         "news": [{"title": n.title} for n in (news or [])][:10],
         "sensitivity": sensitivity,

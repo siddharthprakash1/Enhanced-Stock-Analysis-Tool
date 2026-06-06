@@ -25,15 +25,36 @@ def analyze(
     """Run a full analysis pipeline and write a verified PDF report + HTML dashboard."""
     from .config import Settings
     from .data import get_provider
+    from .data.base import DataUnavailableError
     from .agents.llm import make_llm, structured
     from .pipeline import run_analysis
 
+    symbol = symbol.strip().upper()
     s = Settings()
     provider = get_provider(s)
     llm = make_llm(s)
     factory = lambda schema: structured(llm, schema)  # noqa: E731
-    bench = provider.get_price_history(benchmark, period).bars["Close"]
-    res = run_analysis(symbol, period, out, provider, factory, bench, max_revisions=s.max_revisions)
+
+    try:
+        bench = provider.get_price_history(benchmark, period).bars["Close"]
+    except DataUnavailableError:
+        typer.secho(f"Could not load benchmark '{benchmark}'. Try a valid ticker like SPY.",
+                    fg=typer.colors.RED, err=True)
+        raise typer.Exit(1)
+
+    try:
+        res = run_analysis(
+            symbol, period, out, provider, factory, bench, max_revisions=s.max_revisions,
+            risk_free_rate=s.risk_free_rate, equity_risk_premium=s.equity_risk_premium,
+            tax_rate=s.tax_rate, cost_of_debt_spread=s.cost_of_debt_spread,
+            terminal_growth=s.terminal_growth, dcf_years=s.dcf_years,
+            growth_default=s.growth_default, growth_min=s.growth_min, growth_max=s.growth_max,
+        )
+    except DataUnavailableError as e:
+        typer.secho(f"No data for '{symbol}': {e.field}. Check the ticker symbol and try again.",
+                    fg=typer.colors.RED, err=True)
+        raise typer.Exit(1)
+
     typer.echo(f"PDF:   {res['pdf']}")
     typer.echo(f"HTML:  {res['html']}")
     typer.echo(f"Audit: {res['audit']}")
